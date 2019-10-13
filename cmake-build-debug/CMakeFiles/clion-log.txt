@@ -1,0 +1,4 @@
+/snap/clion/88/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/home/boqin/Env/llvm/bin/clang -DCMAKE_CXX_COMPILER=/home/boqin/Env/llvm/bin/clang++ -G "CodeBlocks - Unix Makefiles" /home/boqin/Projects/Instrument/PrintPass
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/boqin/Projects/Instrument/PrintPass/cmake-build-debug
