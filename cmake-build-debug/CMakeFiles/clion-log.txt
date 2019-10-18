@@ -1,4 +1,19 @@
-/snap/clion/88/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/home/boqin/Env/llvm/bin/clang -DCMAKE_CXX_COMPILER=/home/boqin/Env/llvm/bin/clang++ -G "CodeBlocks - Unix Makefiles" /home/boqin/Projects/Instrument/PrintPass
--- Configuring done
--- Generating done
--- Build files have been written to: /home/boqin/Projects/Instrument/PrintPass/cmake-build-debug
+/snap/clion/88/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/home/boqin/Env/llvm/bin/clang -DCMAKE_CXX_COMPILER=/home/boqin/Env/llvm/bin/clang++ -G "CodeBlocks - Unix Makefiles" /home/boqin/Projects/Instrument/RustBugDetector
+CMake Error at /usr/share/llvm-3.8/cmake/LLVMConfig.cmake:178 (include):
+  include could not find load file:
+
+    /usr/share/llvm/cmake/LLVMExports.cmake
+Call Stack (most recent call first):
+  CMakeLists.txt:6 (find_package)
+
+
+CMake Error at /usr/share/llvm-3.8/cmake/LLVMConfig.cmake:181 (include):
+  include could not find load file:
+
+    /usr/share/llvm/cmake/LLVM-Config.cmake
+Call Stack (most recent call first):
+  CMakeLists.txt:6 (find_package)
+
+
+-- Configuring incomplete, errors occurred!
+See also "/home/boqin/Projects/Instrument/RustBugDetector/cmake-build-debug/CMakeFiles/CMakeOutput.log".

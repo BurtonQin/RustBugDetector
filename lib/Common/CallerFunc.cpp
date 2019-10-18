@@ -10,6 +10,9 @@ bool isCallOrInvokeInst(Instruction *I) {
     if (!I) {
         return false;
     }
+    if (isa<PHINode>(I)) {
+        return false;
+    }
     if (isa<DbgInfoIntrinsic>(I)) {
         return false;
     }
@@ -25,13 +28,22 @@ Function *getCalledFunc(Instruction *pInst, CallSite &CS) {
     }
     if (isa<DbgInfoIntrinsic>(pInst)) {
         return nullptr;
-    } else if (isa<InvokeInst>(pInst) || isa<CallInst>(pInst)) {
+//    }  else if (isa<PHINode>(pInst)) {
+//        return nullptr;
+    }  else if (isa<InvokeInst>(pInst) || isa<CallInst>(pInst)) {
         CS = CallSite(pInst);
-        Function *pCalled = CS.getCalledFunction();
-        if (pCalled) {
-            return pCalled;
-        } else {
+        try {
+            Function *pCalled = CS.getCalledFunction();
+            if (pCalled) {
+                return pCalled;
+            } else {
 //            errs() << "Call FuncPtr:" << '\n';
+                return nullptr;
+            }
+        } catch (...) {
+            errs() << "Bad Inst\n";
+            pInst->print(errs());
+            errs() << '\n';
             return nullptr;
         }
     }

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(PrintPass)
+project(RustBugDetector)
 
 set(CMAKE_CXX_STANDARD 11)
 
