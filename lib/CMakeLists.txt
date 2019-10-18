@@ -1,5 +1,3 @@
 add_subdirectory(Common)
-add_subdirectory(DoubleLockDetector)
-add_subdirectory(InterDoubleLockDetector)
 add_subdirectory(NewDoubleLockDetector)
 add_subdirectory(PrintLock)
