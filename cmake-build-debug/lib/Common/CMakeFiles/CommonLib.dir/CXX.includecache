@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -137,6 +137,8 @@ llvm/ADT/StringRef.h
 /home/boqin/Env/llvm/include/llvm/ADT/llvm/ADT/StringRef.h
 llvm/Support/PointerLikeTypeTraits.h
 /home/boqin/Env/llvm/include/llvm/ADT/llvm/Support/PointerLikeTypeTraits.h
+llvm/Support/ScalableSize.h
+/home/boqin/Env/llvm/include/llvm/ADT/llvm/Support/ScalableSize.h
 cassert
 -
 cstddef
@@ -213,15 +215,13 @@ utility
 /home/boqin/Env/llvm/include/llvm/ADT/Optional.h
 llvm/ADT/None.h
 /home/boqin/Env/llvm/include/llvm/ADT/llvm/ADT/None.h
-llvm/Support/AlignOf.h
-/home/boqin/Env/llvm/include/llvm/ADT/llvm/Support/AlignOf.h
 llvm/Support/Compiler.h
 /home/boqin/Env/llvm/include/llvm/ADT/llvm/Support/Compiler.h
 llvm/Support/type_traits.h
 /home/boqin/Env/llvm/include/llvm/ADT/llvm/Support/type_traits.h
-algorithm
--
 cassert
+-
+memory
 -
 new
 -
@@ -231,6 +231,8 @@ utility
 /home/boqin/Env/llvm/include/llvm/ADT/PointerIntPair.h
 llvm/Support/PointerLikeTypeTraits.h
 /home/boqin/Env/llvm/include/llvm/ADT/llvm/Support/PointerLikeTypeTraits.h
+llvm/Support/type_traits.h
+/home/boqin/Env/llvm/include/llvm/ADT/llvm/Support/type_traits.h
 cassert
 -
 cstdint
@@ -701,6 +703,8 @@ llvm/Support/Casting.h
 /home/boqin/Env/llvm/include/llvm/IR/llvm/Support/Casting.h
 llvm/Support/Compiler.h
 /home/boqin/Env/llvm/include/llvm/IR/llvm/Support/Compiler.h
+llvm/Support/ScalableSize.h
+/home/boqin/Env/llvm/include/llvm/IR/llvm/Support/ScalableSize.h
 cassert
 -
 cstdint
@@ -837,6 +841,8 @@ llvm/IR/Constants.h
 /home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Constants.h
 llvm/IR/DerivedTypes.h
 /home/boqin/Env/llvm/include/llvm/IR/llvm/IR/DerivedTypes.h
+llvm/IR/Function.h
+/home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Function.h
 llvm/IR/Instruction.h
 /home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.h
 llvm/IR/LLVMContext.h
@@ -867,6 +873,12 @@ string
 -
 vector
 -
+llvm/IR/Instruction.def
+/home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.def
+llvm/IR/Instruction.def
+/home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.def
+llvm/IR/Instruction.def
+/home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.def
 llvm/IR/Instruction.def
 /home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.def
 llvm/IR/Instruction.def
@@ -975,12 +987,6 @@ cstdint
 -
 iterator
 -
-llvm/IR/Instruction.def
-/home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.def
-llvm/IR/Instruction.def
-/home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.def
-llvm/IR/Instruction.def
-/home/boqin/Env/llvm/include/llvm/IR/llvm/IR/Instruction.def
 
 /home/boqin/Env/llvm/include/llvm/IR/IntrinsicEnums.inc
 
@@ -1422,12 +1428,16 @@ llvm/Config/abi-breaking.h
 llvm/Support/PointerLikeTypeTraits.h
 /home/boqin/Env/llvm/include/llvm/Support/llvm/Support/PointerLikeTypeTraits.h
 
+/home/boqin/Env/llvm/include/llvm/Support/ScalableSize.h
+
 /home/boqin/Env/llvm/include/llvm/Support/SwapByteOrder.h
 llvm/Support/Compiler.h
 /home/boqin/Env/llvm/include/llvm/Support/llvm/Support/Compiler.h
 llvm/Support/DataTypes.h
 /home/boqin/Env/llvm/include/llvm/Support/llvm/Support/DataTypes.h
 cstddef
+-
+type_traits
 -
 stdlib.h
 -
@@ -1458,13 +1468,13 @@ type_traits
 utility
 -
 
-/home/boqin/Projects/Instrument/PrintPass/lib/Common/CallerFunc.cpp
+/home/boqin/Projects/Instrument/RustBugDetector/lib/Common/CallerFunc.cpp
 Common/CallerFunc.h
-/home/boqin/Projects/Instrument/PrintPass/lib/Common/Common/CallerFunc.h
+/home/boqin/Projects/Instrument/RustBugDetector/lib/Common/Common/CallerFunc.h
 llvm/IR/Instruction.h
-/home/boqin/Projects/Instrument/PrintPass/lib/Common/llvm/IR/Instruction.h
+/home/boqin/Projects/Instrument/RustBugDetector/lib/Common/llvm/IR/Instruction.h
 llvm/IR/IntrinsicInst.h
-/home/boqin/Projects/Instrument/PrintPass/lib/Common/llvm/IR/IntrinsicInst.h
+/home/boqin/Projects/Instrument/RustBugDetector/lib/Common/llvm/IR/IntrinsicInst.h
 llvm/IR/CallSite.h
-/home/boqin/Projects/Instrument/PrintPass/lib/Common/llvm/IR/CallSite.h
+/home/boqin/Projects/Instrument/RustBugDetector/lib/Common/llvm/IR/CallSite.h
 

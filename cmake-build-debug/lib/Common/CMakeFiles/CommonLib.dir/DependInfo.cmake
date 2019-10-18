@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/boqin/Projects/Instrument/PrintPass/lib/Common/CallerFunc.cpp" "/home/boqin/Projects/Instrument/PrintPass/cmake-build-debug/lib/Common/CMakeFiles/CommonLib.dir/CallerFunc.cpp.o"
+  "/home/boqin/Projects/Instrument/RustBugDetector/lib/Common/CallerFunc.cpp" "/home/boqin/Projects/Instrument/RustBugDetector/cmake-build-debug/lib/Common/CMakeFiles/CommonLib.dir/CallerFunc.cpp.o"
   )
-set(CMAKE_CXX_COMPILER_ID "Clang")
+set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
