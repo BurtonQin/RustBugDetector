@@ -70,8 +70,8 @@ Do not use the bc files in incremental!
 
 Then execute the following commands. Change file name and the path accordingly.
 ```
-opt -mem2reg example.bc > example.m2r.bc
-opt -load libNewDoubleLockDetector.so -detect example.m2r.bc > /dev/null 2> double_lock_result.txt
+opt -mem2reg ethcore-XXX.bc > ethcore-XXX.m2r.bc
+opt -load libNewDoubleLockDetector.so -detect ethcore-XXX.m2r.bc > /dev/null 2> double_lock_result.txt
 ```
 The results are in double_lock_result.txt
 The format is 
