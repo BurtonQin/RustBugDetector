@@ -626,20 +626,26 @@ namespace detector {
     static bool trackCallee(Instruction *LockInst,
             std::pair<Instruction *, Function *> &DirectCalleeSite,
             std::map<Function *, std::map<Instruction *, Function *>> &mapCallerCallees,
-            std::set<Function *> &setAliasFunc) {
+            std::map<Function *, std::set<Instruction *>> &mapAliasFuncLock) {
 
         bool HasDoubleLock = false;
 
         Function *DirectCallee = DirectCalleeSite.second;
 
-        if (setAliasFunc.find(DirectCallee) != setAliasFunc.end()) {
+        if (mapAliasFuncLock.find(DirectCallee) != mapAliasFuncLock.end()) {
             HasDoubleLock = true;
-            errs() << "Double Lock Happens";
+            errs() << "Double Lock Happens! First Lock:\n";
             printDebugInfo(LockInst);
             errs() << DirectCallee->getName() << '\n';
-            LockInst->print(errs());
-            errs() << '\n';
+            // Debug Require
+            // LockInst->print(errs());
+            // errs() << '\n';
             printDebugInfo(DirectCalleeSite.first);
+            errs() << "Second Lock(s):\n";
+            for (Instruction *AliasLock : mapAliasFuncLock[DirectCallee]) {
+                printDebugInfo(AliasLock);
+            }
+            errs() << '\n';
         }
 
         std::stack<Function *> WorkList;
@@ -664,9 +670,10 @@ namespace detector {
 //                    errs() << "Callee Found " << Callee->getName() << '\n';
                     if (Visited.find(Callee) == Visited.end()) {
 //                        errs() << "Not Visited\n";
-                        if (setAliasFunc.find(Callee) != setAliasFunc.end()) {
-//                            errs() << "Double Lock Happens";
+                        if (mapAliasFuncLock.find(Callee) != mapAliasFuncLock.end()) {
+                            errs() << "Double Lock Happens! First Lock:\n";
                             printDebugInfo(LockInst);
+                            errs() << Callee->getName() << '\n';
 //                            errs() << Callee->getName() << '\n';
                             // backtrace print
                             mapParentInst[Callee] = CallInst;
@@ -685,6 +692,11 @@ namespace detector {
                                     }
                                 }
                             }
+                            errs() << "Second Lock(s):\n";
+                            for (Instruction *AliasLock : mapAliasFuncLock[Callee]) {
+                                printDebugInfo(AliasLock);
+                            }
+                            errs() << '\n';
                             // end of backtrack
                             HasDoubleLock = true;
                         }
@@ -720,11 +732,13 @@ namespace detector {
                 for (Instruction &II : BB) {
                     Instruction *I = &II;
                     if (setMayAliasLock.find(I) != setMayAliasLock.end()) {
-                        errs() << "Double Lock Happens";
+                        errs() << "Double Lock Happens! First Lock:\n";
                         printDebugInfo(LockInst);
+                        errs() << "Second Lock(s):\n";
                         printDebugInfo(I);
-                        LockInst->print(errs());
-                        errs() << '\n';
+                        // Debug, Required
+                        // LockInst->print(errs());
+                        // errs() << '\n';
                         StopPropagation = true;
                     } else if (itCallInstCallee != mapCallerCallees.end()) {
                         std::map<Instruction *, Function *> &mapCallInstCallee = itCallInstCallee->second;
@@ -747,10 +761,17 @@ namespace detector {
             std::set<Instruction *> setDrop,
             std::map<Function *, std::map<Instruction *, Function *>> &mapCallerCallees) {
 
-        std::set<Function *> setMayAliasFunc;
+//        std::set<Function *> setMayAliasFunc;
+//        for (Instruction *I : setMayAliasLock) {
+//            if (I != LockInst) {
+//                setMayAliasFunc.insert(I->getParent()->getParent());
+//            }
+//        }
+        std::map<Function *, std::set<Instruction *>> mapMayAliasFuncLock;
         for (Instruction *I : setMayAliasLock) {
             if (I != LockInst) {
-                setMayAliasFunc.insert(I->getParent()->getParent());
+                Function *AliasFunc = I->getParent()->getParent();
+                mapMayAliasFuncLock[AliasFunc].insert(I);
             }
         }
 //        // Debug
@@ -780,10 +801,12 @@ namespace detector {
                 Instruction *I = &II;
                 // contains same Lock
                 if (setMayAliasLock.find(I) != setMayAliasLock.end()) {
-                    errs() << "Double Lock Happens";
+                    errs() << "Double Lock Happens! First Lock:\n";
                     printDebugInfo(LockInst);
+                    errs() << "Second Lock(s):\n";
                     printDebugInfo(I);
-                    LockInst->print(errs());
+                    // Debug Require
+                    // LockInst->print(errs());
                     errs() << '\n';
                     StopPropagation = true;
                     // break;
@@ -801,7 +824,11 @@ namespace detector {
                         Function *Callee = it->second;
 //                        errs() << Callee->getName() << "\n";
                         auto CalleeSite = std::make_pair(CI, Callee);
-                        if (trackCallee(LockInst, CalleeSite, mapCallerCallees, setMayAliasFunc)) {
+//                        if (trackCallee(LockInst, CalleeSite, mapCallerCallees, setMayAliasFunc)) {
+//                            StopPropagation = true;
+//                            break;
+//                        }
+                        if (trackCallee(LockInst, CalleeSite, mapCallerCallees, mapMayAliasFuncLock)) {
                             StopPropagation = true;
                             break;
                         }
@@ -846,20 +873,20 @@ namespace detector {
             mapMayAliasLock[Ty][InstLI.first] = InstLI.second;
         }
 
-        // Debug
-        for (auto &TyLI : mapMayAliasLock) {
-            errs() << "Type: ";
-            TyLI.first->print(errs());
-            errs() << '\n';
-            if (TyLI.second.size() <= 1) {
-                continue;
-            }
-            for (auto &LI : TyLI.second) {
-                errs() << '\t';
-                LI.first->print(errs());
-                errs() << '\n';
-            }
-        }
+//        // Debug
+//        for (auto &TyLI : mapMayAliasLock) {
+//            errs() << "Type: ";
+//            TyLI.first->print(errs());
+//            errs() << '\n';
+//            if (TyLI.second.size() <= 1) {
+//                continue;
+//            }
+//            for (auto &LI : TyLI.second) {
+//                errs() << '\t';
+//                LI.first->print(errs());
+//                errs() << '\n';
+//            }
+//        }
 
         std::map<Function *, std::map<Instruction *, Function *>> mapCallerCallee;
         for (auto &CallInstCallee : mapCallInstCallee) {
