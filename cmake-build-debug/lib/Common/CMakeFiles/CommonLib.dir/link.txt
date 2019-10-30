@@ -1,2 +1,0 @@
-/usr/bin/ar qc libCommonLib.a  CMakeFiles/CommonLib.dir/CallerFunc.cpp.o
-/usr/bin/ranlib libCommonLib.a
