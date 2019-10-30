@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/CommonLib.dir/CallerFunc.cpp.o"
-  "libCommonLib.pdb"
   "libCommonLib.a"
+  "libCommonLib.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

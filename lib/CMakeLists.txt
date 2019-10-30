@@ -1,3 +1,7 @@
 add_subdirectory(Common)
 add_subdirectory(NewDoubleLockDetector)
+add_subdirectory(UseAfterFreeDetector)
+add_subdirectory(NewUseAfterFreeDetector)
+add_subdirectory(InvalidFreeDetector)
 add_subdirectory(PrintLock)
+add_subdirectory(PrintManualDrop)

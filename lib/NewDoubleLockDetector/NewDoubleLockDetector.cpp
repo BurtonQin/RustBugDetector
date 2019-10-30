@@ -21,7 +21,10 @@ namespace detector {
 
     char NewDoubleLockDetector::ID = 0;
 
-    NewDoubleLockDetector::NewDoubleLockDetector() : ModulePass(ID) {}
+    NewDoubleLockDetector::NewDoubleLockDetector() : ModulePass(ID) {
+        PassRegistry &Registry = *PassRegistry::getPassRegistry();
+        initializeAAResultsWrapperPassPass(Registry);
+    }
 
     void NewDoubleLockDetector::getAnalysisUsage(AnalysisUsage &AU) const {
         AU.setPreservesAll();
@@ -539,8 +542,21 @@ namespace detector {
                 if (Instruction *UI = dyn_cast<Instruction>(U)) {
                     if (Visited.find(UI) == Visited.end()) {
                         if (isDropInst(UI)) {
+//                            UI->print(errs());
+//                            errs() << '\n';
                             setDropInst.insert(UI);
-                            Stop = true;
+                            Value *V = UI->getOperand(0);
+                            assert(V);
+                            for (User *UV: V->users()) {
+                                if (Instruction *UVI = dyn_cast<Instruction>(UV)) {
+                                    if (Visited.find(UVI) == Visited.end()) {
+                                        if (isDropInst(UVI)) {
+                                            setDropInst.insert(UVI);
+                                        }
+                                    }
+                                }
+                            }
+                            return true;
                         } else if (StoreInst *SI = dyn_cast<StoreInst>(UI)) {
                             if (Instruction *Dest = dyn_cast<Instruction>(SI->getPointerOperand())) {
                                 WorkList.push_back(Dest);
@@ -556,7 +572,7 @@ namespace detector {
                 }
             }
         }
-        return !setDropInst.empty();
+        return false;
     }
 
     static bool parseFunc(Function *F,
@@ -638,12 +654,14 @@ namespace detector {
             printDebugInfo(LockInst);
             errs() << DirectCallee->getName() << '\n';
             // Debug Require
-            // LockInst->print(errs());
-            // errs() << '\n';
+            LockInst->print(errs());
+            errs() << '\n';
             printDebugInfo(DirectCalleeSite.first);
             errs() << "Second Lock(s):\n";
             for (Instruction *AliasLock : mapAliasFuncLock[DirectCallee]) {
                 printDebugInfo(AliasLock);
+                AliasLock->print(errs());
+                errs() << '\n';
             }
             errs() << '\n';
         }
@@ -655,6 +673,8 @@ namespace detector {
 
         WorkList.push(DirectCallee);
         Visited.insert(DirectCallee);
+
+        mapParentInst[DirectCallee] = DirectCalleeSite.first;
 
         while (!WorkList.empty()) {
             Function *Curr = WorkList.top();
@@ -672,9 +692,18 @@ namespace detector {
 //                        errs() << "Not Visited\n";
                         if (mapAliasFuncLock.find(Callee) != mapAliasFuncLock.end()) {
                             errs() << "Double Lock Happens! First Lock:\n";
+                            errs() << LockInst->getParent()->getParent()->getName() << '\n';
                             printDebugInfo(LockInst);
+                            LockInst->print(errs());
+                            errs() << '\n';
                             errs() << Callee->getName() << '\n';
-//                            errs() << Callee->getName() << '\n';
+                            errs() << "Second Lock(s):\n";
+                            for (Instruction *AliasLock : mapAliasFuncLock[Callee]) {
+                                printDebugInfo(AliasLock);
+                                LockInst->print(errs());
+                                errs() << '\n';
+                            }
+                            errs() << '\n';
                             // backtrace print
                             mapParentInst[Callee] = CallInst;
                             std::set<Function *> TraceVisited;
@@ -682,6 +711,9 @@ namespace detector {
                             while (it != mapParentInst.end()) {
                                 Instruction *ParentInst = it->second;
                                 printDebugInfo(ParentInst);
+                                errs() << ParentInst->getParent()->getName() << ": ";
+                                ParentInst->print(errs());
+                                errs() << '\n';
                                 Function *ParentFunc = ParentInst->getParent()->getParent();
                                 it = mapParentInst.find(ParentFunc);
                                 if (it != mapParentInst.end()) {
@@ -692,11 +724,6 @@ namespace detector {
                                     }
                                 }
                             }
-                            errs() << "Second Lock(s):\n";
-                            for (Instruction *AliasLock : mapAliasFuncLock[Callee]) {
-                                printDebugInfo(AliasLock);
-                            }
-                            errs() << '\n';
                             // end of backtrack
                             HasDoubleLock = true;
                         }
@@ -878,13 +905,19 @@ namespace detector {
 //            errs() << "Type: ";
 //            TyLI.first->print(errs());
 //            errs() << '\n';
-//            if (TyLI.second.size() <= 1) {
-//                continue;
-//            }
+////            if (TyLI.second.size() <= 1) {
+////                continue;
+////            }
 //            for (auto &LI : TyLI.second) {
 //                errs() << '\t';
 //                LI.first->print(errs());
 //                errs() << '\n';
+//                printDebugInfo(LI.first);
+//                StringRef Name = LI.first->getParent()->getParent()->getName();
+//                errs() << Name << "\n";
+////                if (Name.contains("closure")) {
+////                    errs() << "Double Lock Might Happens!\n";
+////                }
 //            }
 //        }
 

@@ -6,7 +6,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/boqin/Projects/Instrument/RustBugDetector/lib/Common/CallerFunc.cpp" "/home/boqin/Projects/Instrument/RustBugDetector/cmake-build-debug/lib/Common/CMakeFiles/CommonLib.dir/CallerFunc.cpp.o"
   )
-set(CMAKE_CXX_COMPILER_ID "GNU")
+set(CMAKE_CXX_COMPILER_ID "Clang")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
