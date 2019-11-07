@@ -1,5 +1,5 @@
 # RustBugDetector
-Statically detect Rust bugs
+Statically detect Rust bugs. This is experimental. I hope to migrate it to MIR in the future to get a more accurate result.
 
 ## Description
 Currently, we implement an interprocedural double-lock detector, 
