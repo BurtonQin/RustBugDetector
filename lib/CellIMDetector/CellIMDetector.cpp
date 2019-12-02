@@ -51,12 +51,12 @@ namespace detector {
         std::ifstream myfile("SyncImmuFunc.info");
         std::string line;
         if (myfile.is_open()) {
-            errs() << "SyncImmuFunc:\n";
+//            errs() << "SyncImmuFunc:\n";
             while (getline(myfile, line)) {
                 if (line.find("//", 0) == 0) {
                     continue;
                 }
-                errs() << line << "\n";
+//                errs() << line << "\n";
                 setImmuFunc.insert(line);
             }
             myfile.close();
@@ -230,6 +230,21 @@ namespace detector {
         return false;
     }
 
+    static bool printDebugInfo(Instruction *I) {
+        const llvm::DebugLoc &lockInfo = I->getDebugLoc();
+//        I->print(errs());
+//        errs() << "\n";
+        auto di = lockInfo.get();
+        if (di) {
+            errs() << " " << lockInfo->getDirectory() << ' '
+                   << lockInfo->getFilename() << ' '
+                   << lockInfo.getLine() << "\n";
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     static bool collectCellIMCallers(
             std::set<Function *> &setSyncImmuFunc,
             std::set<Function *> &setCellIMFunc,
@@ -237,12 +252,16 @@ namespace detector {
         for (Function *SyncImmuFunc : setSyncImmuFunc) {
             std::vector<Function *> vecTracker;
             if (containsCellIM(SyncImmuFunc, setCellIMFunc, mapCallerCallSites, vecTracker)) {
+                if (Instruction *FirstInst = SyncImmuFunc->getEntryBlock().getFirstNonPHIOrDbgOrLifetime()) {
+                    printDebugInfo(FirstInst);
+                }
                 errs() << "\nSync Func Contains Interior Mutability\n";
                 errs().write_escaped(SyncImmuFunc->getName()) << "\n";
                 errs() << "Track:\n";
                 for (Function *F : vecTracker) {
                     errs() << "\t";
                     errs().write_escaped(F->getName()) << "\n";
+                    printDebugInfo(F->getEntryBlock().getFirstNonPHIOrDbgOrLifetime());
                 }
             }
         }
@@ -252,11 +271,11 @@ namespace detector {
     bool CellIMDetector::runOnModule(Module &M) {
         this->pModule = &M;
 
-        std::set<std::string> setSyncImmuFuncName;
+//        std::set<std::string> setSyncImmuFuncName;
         std::set<Function *> setSyncImmuFunc;
-        if (!readSyncImmuFunc(setSyncImmuFuncName)) {
-            return false;
-        }
+//        if (!readSyncImmuFunc(setSyncImmuFuncName)) {
+//            return false;
+//        }
         std::map<StringRef, Function *> mapFuncName;
         for (Function &F : M) {
             if (F.begin() != F.end()) {
@@ -264,21 +283,26 @@ namespace detector {
                 mapFuncName[FuncName] = &F;
             }
         }
-        for (StringRef FuncName : setSyncImmuFuncName) {
-            Function *F = M.getFunction(FuncName);
-            if (F) {
-                setSyncImmuFunc.insert(F);
-            } else {
-                bool NotFound = true;
-                for (auto &kv : mapFuncName) {
-                    if (kv.first.startswith(FuncName)) {
-                        setSyncImmuFunc.insert(kv.second);
-                        NotFound = false;
-                    }
-                }
-                if (NotFound) {
-                    errs() << FuncName << " Cannot Found!\n";
-                }
+//        for (StringRef FuncName : setSyncImmuFuncName) {
+//            Function *F = M.getFunction(FuncName);
+//            if (F) {
+//                setSyncImmuFunc.insert(F);
+//            } else {
+//                bool NotFound = true;
+//                for (auto &kv : mapFuncName) {
+//                    if (kv.first.startswith(FuncName)) {
+//                        setSyncImmuFunc.insert(kv.second);
+//                        NotFound = false;
+//                    }
+//                }
+//                if (NotFound) {
+////                    errs() << FuncName << " Cannot Found!\n";
+//                }
+//            }
+//        }
+        for (Function &F : M) {
+            if (F.begin() != F.end()) {
+                setSyncImmuFunc.insert(&F);
             }
         }
 
@@ -293,10 +317,10 @@ namespace detector {
                 collectCallees(&F, mapCallerCallSites);
             }
         }
-        errs() << "CellIMFunc:\n";
-        for (Function *F : setCellIMFunc) {
-            errs().write_escaped(F->getName()) << "\n";
-        }
+//        errs() << "CellIMFunc:\n";
+//        for (Function *F : setCellIMFunc) {
+//            errs().write_escaped(F->getName()) << "\n";
+//        }
         collectCellIMCallers(setSyncImmuFunc, setCellIMFunc, mapCallerCallSites);
         return false;
     }
