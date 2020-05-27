@@ -1,6 +1,8 @@
 add_subdirectory(Common)
 add_subdirectory(CFG)
+add_subdirectory(DoubleLockDetector)
 add_subdirectory(NewDoubleLockDetector)
+add_subdirectory(RustDoubleLockDetector)
 add_subdirectory(UseAfterFreeDetector)
 add_subdirectory(NewUseAfterFreeDetector)
 add_subdirectory(InvalidFreeDetector)

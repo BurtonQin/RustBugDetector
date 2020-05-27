@@ -10,6 +10,7 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/Operator.h"
 
 #include "Common/CallerFunc.h"
 
@@ -212,6 +213,8 @@ namespace detector {
             if (Function *F = getCalledFunc(NI, CS)) {
                 if (F->getName().startswith("_ZN4core3ptr18real_drop_in_place")) {
                     return true;
+                } else if (F->getName().startswith("_ZN4core3mem4drop17h")) {
+                    return true;
                 }
             }
         }
@@ -273,6 +276,20 @@ namespace detector {
         return !setDropInst.empty();
     }
 
+    static bool isLocalCrateInst(Instruction *I) {
+        const llvm::DebugLoc &lockInfo = I->getDebugLoc();
+        auto di = lockInfo.get();
+        if (di) {
+            if (lockInfo->getDirectory() == "") {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
     static bool printDebugInfo(Instruction *I) {
         const llvm::DebugLoc &lockInfo = I->getDebugLoc();
 //        I->print(errs());
@@ -315,6 +332,30 @@ namespace detector {
         return true;
     }
 
+    // bool operator<(const MutexSource& lhs, const MutexSource& rhs) {
+    //     if (lhs.direct == rhs.direct) {
+    //         return false;
+    //     }
+    //     if ((unsigned long)lhs.structTy < (unsigned long)rhs.structTy) {
+    //         return true;
+    //     } else if ((unsigned long)lhs.structTy > (unsigned long)rhs.structTy) {
+    //         return false;
+    //     } else {
+    //         if (lhs.index.size() < rhs.index.size()) {
+    //             return true;
+    //         } else if (lhs.index.size() > rhs.index.size()) {
+    //             return false;
+    //         } else {
+    //             for (std::size_t i = 0; i < lhs.index.size(); ++i) {
+    //                 if (lhs.index[i] < rhs.index[i]) {
+    //                     return true;
+    //                 }
+    //             }
+    //             return false;
+    //         }
+    //     }
+    // }
+
     static bool trackMutexToSelf(Value *mutex, MutexSource &MS) {
         if (!mutex) {
             return false;
@@ -333,19 +374,28 @@ namespace detector {
                 MS.structTy = structTy;
 //                Self->print(errs());
 //                errs() << "\n";
-//                for (unsigned i = 1; i < GEP->getNumOperands(); ++i) {
-//                    errs() << "index: ";
-//                    APInt idx = dyn_cast<ConstantInt>(GEP->getOperand(i))->getValue();
-//                    MS.index.push_back(idx);
-//                    GEP->getOperand(i)->getType()->print(errs());
-//                    errs() << "\n";
-//                    GEP->getOperand(i)->print(errs());
-//                    errs() << "\n";
-//                }
+               for (unsigned i = 1; i < GEP->getNumOperands(); ++i) {
+                //    errs() << "index: ";
+                   APInt idx = dyn_cast<ConstantInt>(GEP->getOperand(i))->getValue();
+                   MS.index.push_back(idx);
+                //    GEP->getOperand(i)->getType()->print(errs());
+                //    errs() << "\n";
+                //    GEP->getOperand(i)->print(errs());
+                //    errs() << "\n";
+               }
                 return true;
-            } else if (BitCastInst *BCI = dyn_cast<BitCastInst>(it->get())) {
+            } else if (BitCastOperator *BCO = dyn_cast<BitCastOperator>(it->get())) {
                 // TODO;
-                return false;
+                Value *Self = BCO->getOperand(0);
+                Type *structTy = Self->stripPointerCasts()->getType()->getContainedType(0);
+//                structTy->print(errs());
+//                errs() << "\n";
+                if (!isa<StructType>(structTy)) {
+//                    errs() << "Self not Struct" << "\n";
+                    continue;
+                }
+                MS.structTy = structTy;
+                return true;
             }
         }
         return false;
@@ -529,6 +579,9 @@ namespace detector {
         if (!RI) {
             return false;
         }
+        errs() << "LockInst:\n";
+        RI->print(errs());
+        errs() << "\n";
         setDropInst.clear();
 
         std::list<Instruction *> WorkList;
@@ -542,8 +595,9 @@ namespace detector {
                 if (Instruction *UI = dyn_cast<Instruction>(U)) {
                     if (Visited.find(UI) == Visited.end()) {
                         if (isDropInst(UI)) {
-//                            UI->print(errs());
-//                            errs() << '\n';
+                            errs() << "DropInst\n";
+                           UI->print(errs());
+                           errs() << '\n';
                             setDropInst.insert(UI);
                             Value *V = UI->getOperand(0);
                             assert(V);
@@ -563,6 +617,26 @@ namespace detector {
                             } else {
                                 errs() << "StoreInst Dest is not a Inst\n";
                                 printDebugInfo(Curr);
+                            }
+                        } else if (LoadInst *LI = dyn_cast<LoadInst>(UI)) {
+                            errs() << "LoadInst:\n";
+                            for (User *UV: LI->users()) {
+                                if (Instruction *UVI = dyn_cast<Instruction>(UV)) {
+                                    if (isDropInst(UVI)) {
+                                        setDropInst.insert(UVI);
+                                    }
+                                }
+                                Value *V = UI->getOperand(0);
+                                assert(V);
+                                for (User *UV2: V->users()) {
+                                    if (Instruction *UVI2 = dyn_cast<Instruction>(UV2)) {
+                                        if (Visited.find(UVI2) == Visited.end()) {
+                                            if (isDropInst(UVI2)) {
+                                                setDropInst.insert(UVI2);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         } else {
                             WorkList.push_back(UI);
@@ -587,6 +661,9 @@ namespace detector {
             for (Instruction &II : BB) {
                 Instruction *I = &II;
                 if (!skipInst(I)) {
+                    if (!isLocalCrateInst(I)) {
+                        continue;
+                    }
                     if (isa<CallInst>(I) || isa<InvokeInst>(I)) {
                         CallSite CS(I);
                         Function *Callee = CS.getCalledFunction();
@@ -899,6 +976,14 @@ namespace detector {
             }
             mapMayAliasLock[Ty][InstLI.first] = InstLI.second;
         }
+
+        // std::map<MutexSource, std::map<Instruction *, stLockInfo>> mapStructAliasLock;
+        // for (auto &kv : mapMayAliasLock) {
+        //     for (auto &kv2 : kv.second) {
+        //         MutexSource MS;
+        //         kv2.first
+        //     }
+        // }
 
 //        // Debug
 //        for (auto &TyLI : mapMayAliasLock) {
